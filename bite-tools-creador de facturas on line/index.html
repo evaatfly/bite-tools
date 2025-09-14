@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creador de Facturas Online</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f7fa;
+            --text-color: #333;
+            --border-color: #dcdfe6;
+            --white: #fff;
+            --danger-color: #e57373;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .invoice-creator {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        #items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        #items-table th,
+        #items-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        #items-table th {
+            background-color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        #items-table input {
+            width: 95%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .action-cell {
+            text-align: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background-color: #357abd;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: var(--white);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: var(--white);
+            padding: 0.4rem 0.8rem;
+        }
+        
+        .totals {
+            margin-top: 1.5rem;
+            text-align: right;
+        }
+
+        .totals p {
+            margin: 0.5rem 0;
+            font-size: 1.1rem;
+        }
+
+        .totals p span {
+            display: inline-block;
+            min-width: 100px;
+            font-weight: 600;
+        }
+
+        #final-invoice {
+            display: none;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        
+        #final-invoice h2 {
+            margin-bottom: 2rem;
+        }
+
+        .invoice-header, .invoice-footer {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .invoice-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        #final-items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2rem;
+        }
+
+        #final-items-table th, #final-items-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        #final-totals {
+            text-align: right;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="invoice-creator">
+            <h1>Creador de Facturas</h1>
+            
+            <fieldset>
+                <legend><h2>Datos del Cliente</h2></legend>
+                <div class="form-group">
+                    <label for="client-name">Nombre del Cliente</label>
+                    <input type="text" id="client-name" placeholder="Ej: Juan Pérez">
+                </div>
+                <div class="form-group">
+                    <label for="client-address">Dirección</label>
+                    <textarea id="client-address" rows="3" placeholder="Ej: Calle Falsa 123, Springfield"></textarea>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend><h2>Ítems</h2></legend>
+                <table id="items-table">
+                    <thead>
+                        <tr>
+                            <th>Descripción</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unitario</th>
+                            <th>Total</th>
+                            <th class="action-cell">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="items-body">
+                        <!-- Las filas de ítems se agregarán aquí -->
+                    </tbody>
+                </table>
+                <button id="add-item-btn" class="btn btn-secondary" style="margin-top: 1rem;">+ Agregar Ítem</button>
+            </fieldset>
+
+            <div class="totals">
+                <div class="form-group" style="max-width: 150px; margin-left: auto;">
+                    <label for="tax-percentage">Porcentaje Impuesto (%)</label>
+                    <input type="number" id="tax-percentage" value="21" min="0" step="1">
+                </div>
+                <p>Subtotal: <span id="subtotal">$0.00</span></p>
+                <p><span id="tax-label">Impuesto (21%)</span>: <span id="tax">$0.00</span></p>
+                <p><strong>Total:</strong> <span id="total"><strong>$0.00</strong></span></p>
+            </div>
+
+            <button id="generate-invoice-btn" class="btn btn-primary">Generar Factura</button>
+        </div>
+
+        <div id="final-invoice">
+            <div class="invoice-header">
+                <h2>Factura</h2>
+                <p><strong>Fecha:</strong> <span id="final-date"></span></p>
+            </div>
+            <div class="invoice-details">
+                <div>
+                    <h3>Cliente:</h3>
+                    <p id="final-client-name"></p>
+                    <p id="final-client-address"></p>
+                </div>
+            </div>
+            <table id="final-items-table">
+                <thead>
+                    <tr>
+                        <th>Descripción</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unitario</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="final-items-body">
+                </tbody>
+            </table>
+            <div id="final-totals">
+                <p>Subtotal: <span id="final-subtotal"></span></p>
+                <p><span id="final-tax-label">Impuesto (21%)</span>: <span id="final-tax"></span></p>
+                <p><strong>Total:</strong> <span id="final-total"></span></p>
+            </div>
+             <div class="invoice-footer">
+                <p>¡Gracias por su compra!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const itemsBody = document.getElementById('items-body');
+            const addItemBtn = document.getElementById('add-item-btn');
+            const taxPercentageInput = document.getElementById('tax-percentage');
+
+            const updateTotals = () => {
+                let subtotal = 0;
+                const rows = itemsBody.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+                    const price = parseFloat(row.querySelector('.price').value) || 0;
+                    const total = quantity * price;
+                    row.querySelector('.total').textContent = `${total.toFixed(2)}`;
+                    subtotal += total;
+                });
+
+                const taxPercentage = parseFloat(taxPercentageInput.value) || 0;
+                const taxRate = taxPercentage / 100;
+                const tax = subtotal * taxRate;
+                const total = subtotal + tax;
+
+                document.getElementById('subtotal').textContent = `${subtotal.toFixed(2)}`;
+                document.getElementById('tax-label').textContent = `Impuesto (${taxPercentage}%)`;
+                document.getElementById('tax').textContent = `${tax.toFixed(2)}`;
+                document.getElementById('total').textContent = `${total.toFixed(2)}`;
+            };
+
+            taxPercentageInput.addEventListener('input', updateTotals);
+
+            const createItemRow = () => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="text" class="description" placeholder="Descripción del servicio o producto"></td>
+                    <td><input type="number" class="quantity" value="1" min="0"></td>
+                    <td><input type="number" class="price" value="0.00" step="0.01" min="0"></td>
+                    <td class="total">$0.00</td>
+                    <td class="action-cell"><button class="btn btn-danger remove-item-btn">X</button></td>
+                `;
+
+                row.querySelector('.remove-item-btn').addEventListener('click', () => {
+                    row.remove();
+                    updateTotals();
+                });
+                
+                row.querySelectorAll('.quantity, .price').forEach(input => {
+                    input.addEventListener('input', updateTotals);
+                });
+
+                itemsBody.appendChild(row);
+            };
+
+            addItemBtn.addEventListener('click', createItemRow);
+            
+            // Crear una fila inicial
+            createItemRow();
+
+            // Generar la factura final
+            document.getElementById('generate-invoice-btn').addEventListener('click', () => {
+                // Poblar datos de la factura final
+                document.getElementById('final-date').textContent = new Date().toLocaleDateString('es-ES');
+                document.getElementById('final-client-name').textContent = document.getElementById('client-name').value;
+                document.getElementById('final-client-address').textContent = document.getElementById('client-address').value;
+
+                const finalItemsBody = document.getElementById('final-items-body');
+                finalItemsBody.innerHTML = ''; // Limpiar tabla
+                const rows = itemsBody.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const description = row.querySelector('.description').value;
+                    const quantity = row.querySelector('.quantity').value;
+                    const price = parseFloat(row.querySelector('.price').value).toFixed(2);
+                    const total = (quantity * price).toFixed(2);
+
+                    const finalRow = document.createElement('tr');
+                    finalRow.innerHTML = `
+                        <td>${description}</td>
+                        <td>${quantity}</td>
+                        <td>${price}</td>
+                        <td>${total}</td>
+                    `;
+                    finalItemsBody.appendChild(finalRow);
+                });
+
+                const taxPercentage = parseFloat(taxPercentageInput.value) || 0;
+                document.getElementById('final-subtotal').textContent = document.getElementById('subtotal').textContent;
+                document.getElementById('final-tax-label').textContent = `Impuesto (${taxPercentage}%)`;
+                document.getElementById('final-tax').textContent = document.getElementById('tax').textContent;
+                document.getElementById('final-total').textContent = document.getElementById('total').textContent;
+
+                // Ocultar formulario y mostrar factura
+                document.getElementById('invoice-creator').style.display = 'none';
+                document.getElementById('final-invoice').style.display = 'block';
+            });
+        });
+    </script>
+
+</body>
+</html>

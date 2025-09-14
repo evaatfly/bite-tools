@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Herramienta de Transformación de Imágenes</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 2rem;
+        }
+        .container {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+        #image-preview {
+            max-width: 100%;
+            height: auto;
+            margin-top: 1.5rem;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            display: none;
+        }
+        .controls {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+        .btn, input[type="file"] {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        #download-btn {
+            background-color: #28a745;
+            color: white;
+            display: none; /* Oculto hasta que haya una imagen */
+        }
+        #download-btn:hover {
+            background-color: #218838;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .file-label {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .file-label:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Transformador de Imágenes</h1>
+    
+    <label for="file-input" class="file-label">Seleccionar Imagen</label>
+    <input type="file" id="file-input" accept="image/*">
+
+    <img id="image-preview" src="" alt="Vista previa de la imagen">
+
+    <div class="controls">
+        <button id="grayscale-btn" class="btn btn-secondary">Escala de Grises</button>
+        <button id="rotate-btn" class="btn btn-secondary">Rotar 90°</button>
+        <button id="flip-btn" class="btn btn-secondary">Voltear</button>
+    </div>
+
+    <div class="controls">
+        <button id="download-btn" class="btn">Descargar Imagen</button>
+    </div>
+</div>
+
+<script>
+    const fileInput = document.getElementById('file-input');
+    const imagePreview = document.getElementById('image-preview');
+    const grayscaleBtn = document.getElementById('grayscale-btn');
+    const rotateBtn = document.getElementById('rotate-btn');
+    const flipBtn = document.getElementById('flip-btn');
+    const downloadBtn = document.getElementById('download-btn');
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    let originalImage = null;
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                originalImage = new Image();
+                originalImage.onload = () => {
+                    canvas.width = originalImage.width;
+                    canvas.height = originalImage.height;
+                    ctx.drawImage(originalImage, 0, 0);
+                    imagePreview.src = canvas.toDataURL();
+                    imagePreview.style.display = 'block';
+                    downloadBtn.style.display = 'inline-block';
+                };
+                originalImage.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    grayscaleBtn.addEventListener('click', () => {
+        if (!originalImage) return;
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+            data[i] = avg;     // Red
+            data[i + 1] = avg; // Green
+            data[i + 2] = avg; // Blue
+        }
+        ctx.putImageData(imageData, 0, 0);
+        imagePreview.src = canvas.toDataURL();
+    });
+
+    rotateBtn.addEventListener('click', () => {
+        if (!originalImage) return;
+        const newWidth = canvas.height;
+        const newHeight = canvas.width;
+        
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCanvas.width = newWidth;
+        tempCanvas.height = newHeight;
+
+        tempCtx.translate(newWidth / 2, newHeight / 2);
+        tempCtx.rotate(90 * Math.PI / 180);
+        tempCtx.drawImage(canvas, -newHeight / 2, -newWidth / 2);
+
+        canvas.width = newWidth;
+        canvas.height = newHeight;
+        ctx.drawImage(tempCanvas, 0, 0);
+        
+        imagePreview.src = canvas.toDataURL();
+    });
+
+    flipBtn.addEventListener('click', () => {
+        if (!originalImage) return;
+        
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+
+        tempCtx.translate(canvas.width, 0);
+        tempCtx.scale(-1, 1);
+        tempCtx.drawImage(canvas, 0, 0);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(tempCanvas, 0, 0);
+
+        imagePreview.src = canvas.toDataURL();
+    });
+
+    downloadBtn.addEventListener('click', () => {
+        if (!originalImage) return;
+        canvas.toBlob((blob) => {
+            const link = document.createElement('a');
+            link.download = 'imagen-transformada.png';
+            link.href = URL.createObjectURL(blob);
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }, 'image/png');
+    });
+
+</script>
+
+</body>
+</html>

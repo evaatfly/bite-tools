@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Impuestos por País</title>
+    <style>
+        :root {
+            --primary-color: #0A2E5D; /* Azul corporativo oscuro */
+            --secondary-color: #F2F5F9; /* Gris claro de fondo */
+            --accent-color: #4CAF50; /* Verde para el botón */
+            --text-color: #333;
+            --border-color: #DDE2E8;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .calculator-container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px var(--shadow-color);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(10, 46, 93, 0.1);
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 18px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .result-container {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: var(--secondary-color);
+            border-radius: 8px;
+            display: none; /* Oculto por defecto */
+        }
+
+        #resultado {
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator-container">
+        <h1>Calculadora de Impuestos</h1>
+        <div class="form-group">
+            <label for="pais">País</label>
+            <select id="pais">
+                <option value="ar">Argentina</option>
+                <option value="cl">Chile</option>
+                <option value="co">Colombia</option>
+                <option value="es">España</option>
+                <option value="mx">México</option>
+                <option value="pe">Perú</option>
+                <option value="us">Estados Unidos</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="ingreso">Ingreso Anual (en USD)</label>
+            <input type="number" id="ingreso" placeholder="Ej: 50000">
+        </div>
+        <button id="calcularBtn">Calcular Impuesto</button>
+        <div class="result-container" id="result-box">
+            <p>Total a pagar (impuesto anual):</p>
+            <p id="resultado"></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const calcularBtn = document.getElementById('calcularBtn');
+            
+            // Datos de impuestos por país (ejemplos simplificados con tramos)
+            const tasasImpuestos = {
+                ar: [
+                    { limite: 10000, tasa: 0.05 },
+                    { limite: 30000, tasa: 0.12 },
+                    { limite: Infinity, tasa: 0.20 }
+                ],
+                cl: [
+                    { limite: 15000, tasa: 0.08 },
+                    { limite: 40000, tasa: 0.15 },
+                    { limite: Infinity, tasa: 0.25 }
+                ],
+                co: [
+                    { limite: 12000, tasa: 0.10 },
+                    { limite: 35000, tasa: 0.19 },
+                    { limite: Infinity, tasa: 0.28 }
+                ],
+                es: [
+                    { limite: 12450, tasa: 0.19 },
+                    { limite: 20200, tasa: 0.24 },
+                    { limite: 35200, tasa: 0.30 },
+                    { limite: 60000, tasa: 0.37 },
+                    { limite: Infinity, tasa: 0.45 }
+                ],
+                mx: [
+                    { limite: 8000, tasa: 0.06 },
+                    { limite: 25000, tasa: 0.15 },
+                    { limite: 50000, tasa: 0.22 },
+                    { limite: Infinity, tasa: 0.30 }
+                ],
+                pe: [
+                    { limite: 7000, tasa: 0.08 },
+                    { limite: 28000, tasa: 0.14 },
+                    { limite: 50000, tasa: 0.17 },
+                    { limite: Infinity, tasa: 0.20 }
+                ],
+                us: [ // Federal (simplificado)
+                    { limite: 9950, tasa: 0.10 },
+                    { limite: 40525, tasa: 0.12 },
+                    { limite: 86375, tasa: 0.22 },
+                    { limite: 164925, tasa: 0.24 },
+                    { limite: Infinity, tasa: 0.32 }
+                ]
+            };
+
+            calcularBtn.addEventListener('click', function() {
+                const pais = document.getElementById('pais').value;
+                const ingreso = parseFloat(document.getElementById('ingreso').value);
+                const resultadoDiv = document.getElementById('resultado');
+                const resultBox = document.getElementById('result-box');
+
+                if (isNaN(ingreso) || ingreso < 0) {
+                    alert("Por favor, ingrese un valor de ingreso válido.");
+                    return;
+                }
+
+                const tramos = tasasImpuestos[pais];
+                let impuestoTotal = 0;
+                let ingresoRestante = ingreso;
+
+                for (let i = 0; i < tramos.length; i++) {
+                    const tramoAnteriorLimite = i > 0 ? tramos[i-1].limite : 0;
+                    const limiteActual = tramos[i].limite;
+                    const tasa = tramos[i].tasa;
+                    
+                    if (ingreso > tramoAnteriorLimite) {
+                        const baseImponibleEnTramo = Math.min(ingreso, limiteActual) - tramoAnteriorLimite;
+                        impuestoTotal += baseImponibleEnTramo * tasa;
+                    }
+                }
+                
+                resultadoDiv.textContent = `USD ${impuestoTotal.toFixed(2)}`;
+                resultBox.style.display = 'block';
+            });
+        });
+    </script>
+
+</body>
+</html>

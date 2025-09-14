@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horóscopo Diario</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400&display=swap');
+
+        :root {
+            --primary-color: #1a1a2e;
+            --secondary-color: #16213e;
+            --accent-color: #e94560;
+            --text-color: #dcdcdc;
+            --gold-color: #f0e68c;
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .horoscope-container {
+            background-color: var(--secondary-color);
+            border-radius: 15px;
+            padding: 30px 40px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--accent-color);
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold-color);
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .controls {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        select, button {
+            font-family: 'Lato', sans-serif;
+            font-size: 1em;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--gold-color);
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, button:focus {
+            outline: none;
+            box-shadow: 0 0 10px var(--accent-color);
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: #fff;
+            border-color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #ff5777;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(233, 69, 96, 0.4);
+        }
+
+        #prediction {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(26, 26, 46, 0.5);
+            border-radius: 10px;
+            min-height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1em;
+            line-height: 1.6;
+            font-weight: 300;
+            transition: opacity 0.5s ease;
+            opacity: 0;
+        }
+
+        #prediction.visible {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="horoscope-container">
+        <h1>Horóscopo Diario</h1>
+        <div class="controls">
+            <select id="sign-select">
+                <option value="">Elige tu signo...</option>
+                <option value="aries">Aries</option>
+                <option value="tauro">Tauro</option>
+                <option value="geminis">Géminis</option>
+                <option value="cancer">Cáncer</option>
+                <option value="leo">Leo</option>
+                <option value="virgo">Virgo</option>
+                <option value="libra">Libra</option>
+                <option value="escorpio">Escorpio</option>
+                <option value="sagitario">Sagitario</option>
+                <option value="capricornio">Capricornio</option>
+                <option value="acuario">Acuario</option>
+                <option value="piscis">Piscis</option>
+            </select>
+            <button id="get-horoscope">Ver Horóscopo</button>
+        </div>
+        <div id="prediction">
+            <p>Tu destino te espera...</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const getHoroscopeBtn = document.getElementById('get-horoscope');
+            const signSelect = document.getElementById('sign-select');
+            const predictionDiv = document.getElementById('prediction');
+
+            const horoscopes = {
+                aries: "Hoy la energía de Marte te impulsa a tomar la iniciativa. Es un día excelente para comenzar nuevos proyectos y no tener miedo a liderar.",
+                tauro: "La paciencia será tu mejor aliada. Venus te sonríe en los asuntos del corazón, pero en lo profesional, es mejor ir paso a paso y consolidar lo que ya tienes.",
+                geminis: "Tu mente está más aguda que nunca. Mercurio favorece la comunicación, así que es un momento ideal para tener esas conversaciones importantes que has estado posponiendo.",
+                cancer: "La Luna, tu regente, intensifica tu intuición. Hazle caso a tu corazonada, especialmente en decisiones familiares o del hogar. Te guiará por el camino correcto.",
+                leo: "El Sol brilla para ti, dándote un carisma especial. Hoy serás el centro de atención. Aprovéchalo para inspirar a otros y avanzar en tus metas personales.",
+                virgo: "Es un día para enfocarte en los detalles. Tu habilidad para organizar y analizar te ayudará a resolver un problema que a otros se les ha escapado. Confía en tu método.",
+                libra: "El equilibrio es la clave hoy. Evita los extremos y busca la armonía en tus relaciones. Una decisión justa que tomes hoy traerá beneficios a largo plazo.",
+                escorpio: "La intensidad de Plutón te envuelve. Es un día de transformación. No temas dejar ir lo que ya no te sirve para hacer espacio a nuevas oportunidades.",
+                sagitario: "Júpiter expande tus horizontes. La aventura te llama. Anímate a probar algo nuevo, ya sea un libro, una comida o un camino diferente a casa. La suerte favorece a los audaces.",
+                capricornio: "La disciplina de Saturno te recompensa. El trabajo duro de las últimas semanas comienza a dar frutos. Es un buen día para planificar tu futuro financiero.",
+                acuario: "Urano te trae ideas innovadoras. Tu originalidad estará en su punto más alto. Comparte tus pensamientos, podrías iniciar un cambio importante en tu círculo social o laboral.",
+                piscis: "La sensibilidad de Neptuno agudiza tu creatividad. Es un día perfecto para las artes, la música o simplemente para soñar despierto. Conecta con tu lado espiritual."
+            };
+
+            getHoroscopeBtn.addEventListener('click', () => {
+                const selectedSign = signSelect.value;
+                predictionDiv.classList.remove('visible');
+
+                setTimeout(() => {
+                    if (selectedSign && horoscopes[selectedSign]) {
+                        predictionDiv.innerHTML = `<p>${horoscopes[selectedSign]}</p>`;
+                    } else {
+                        predictionDiv.innerHTML = '<p>Por favor, elige un signo zodiacal para ver tu predicción.</p>';
+                    }
+                    predictionDiv.classList.add('visible');
+                }, 300); // Pequeño delay para la transición
+            });
+            
+            // Mostrar el texto inicial con la animación
+            setTimeout(() => {
+                predictionDiv.classList.add('visible');
+            }, 100);
+        });
+    </script>
+
+</body>
+</html>

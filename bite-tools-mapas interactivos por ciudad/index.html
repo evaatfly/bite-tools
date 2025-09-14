@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía de Viaje Interactiva</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+        }
+        #map {
+            width: 800px;
+            height: 600px;
+            border: 1px solid #ccc;
+        }
+        .search-container {
+            display: flex;
+            width: 800px;
+            margin-bottom: 20px;
+        }
+        input[type="search"] {
+            flex-grow: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Guía de Viaje Interactiva</h1>
+    <div class="search-container">
+        <input type="search" id="search-input" placeholder="Buscar una ciudad...">
+        <button id="search-button">Buscar</button>
+    </div>
+    <div id="map"></div>
+
+    <script>
+        let map;
+        let marker;
+
+        function initMap() {
+            const buenosAires = { lat: -34.6037, lng: -58.3816 };
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 14,
+                center: buenosAires,
+            });
+
+            marker = new google.maps.Marker({
+                position: buenosAires,
+                map: map,
+                title: "Ubicación inicial"
+            });
+
+            const searchInput = document.getElementById("search-input");
+            const searchButton = document.getElementById("search-button");
+            const geocoder = new google.maps.Geocoder();
+
+            searchButton.addEventListener("click", () => {
+                geocodeCity(geocoder, map, searchInput.value);
+            });
+
+            searchInput.addEventListener("keyup", (event) => {
+                if (event.key === "Enter") {
+                    geocodeCity(geocoder, map, searchInput.value);
+                }
+            });
+        }
+
+        function geocodeCity(geocoder, resultsMap, address) {
+            if (!address) {
+                alert("Por favor, ingresa una ciudad.");
+                return;
+            }
+            geocoder.geocode({ address: address }, (results, status) => {
+                // Imprime la respuesta completa de la API en la consola para depuración
+                console.log("Respuesta de Geocoding API:", results);
+
+                if (status === "OK") {
+                    resultsMap.setCenter(results[0].geometry.location);
+                    
+                    // Mover el marcador existente
+                    marker.setPosition(results[0].geometry.location);
+                    marker.setTitle(results[0].formatted_address);
+
+                } else {
+                    alert("No se pudo encontrar la ciudad por la siguiente razón: " + status);
+                }
+            });
+        }
+    </script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdmINqMezNxE5szd7smx4mJpp3jOAa0q0&callback=initMap&libraries=places">
+    </script>
+
+</body>
+</html>

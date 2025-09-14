@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tirada de Tarot Online</title>
+    <style>
+        /* --- Estilos Generales --- */
+        body {
+            background-color: #1a1a2e; /* Azul noche oscuro */
+            color: #e0e0e0;
+            font-family: 'Georgia', serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* --- Contenedor Principal de la Herramienta --- */
+        .tarot-container {
+            background-color: #2a2a3e;
+            border: 2px solid #c0a060; /* Dorado pálido */
+            border-radius: 15px;
+            padding: 30px 40px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.2);
+        }
+
+        h1 {
+            color: #f0e68c; /* Dorado claro (Khaki) */
+            font-size: 2.5em;
+            margin-bottom: 25px;
+            text-shadow: 0 0 10px #f0e68c;
+        }
+
+        /* --- Botón para Sacar Carta --- */
+        #draw-card-btn {
+            background-color: #8a2be2; /* Azul violeta */
+            color: #ffffff;
+            border: 2px solid #c0a060;
+            border-radius: 10px;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-family: 'Georgia', serif;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            margin-bottom: 30px;
+        }
+
+        #draw-card-btn:hover {
+            background-color: #9932cc; /* Orquídea medio */
+            transform: scale(1.05);
+        }
+
+        /* --- Espacio para Mostrar la Carta --- */
+        .card-result {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-left: 5px solid #c0a060;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: left;
+            display: none; /* Oculto por defecto */
+        }
+
+        #card-name {
+            color: #f0e68c;
+            font-size: 1.8em;
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        #card-description {
+            font-size: 1.1em;
+            line-height: 1.6;
+            text-align: justify;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tarot-container">
+        <h1>Tirada de Tarot Místico</h1>
+        <button id="draw-card-btn">Sacar una Carta</button>
+        <div id="card-display" class="card-result">
+            <h2 id="card-name"></h2>
+            <p id="card-description"></p>
+        </div>
+    </div>
+
+    <script>
+        // --- Base de Datos de Cartas de Tarot ---
+        const mazo = [
+            {
+                nombre: "El Loco",
+                descripcion: "Representa el inicio de una aventura, la inocencia, la espontaneidad y la libertad. Un salto de fe hacia lo desconocido te espera, lleno de potencial y posibilidades infinitas."
+            },
+            {
+                nombre: "El Mago",
+                descripcion: "Simboliza el poder, la habilidad y la concentración. Tienes todas las herramientas y recursos a tu disposición para manifestar tus deseos. Es el momento de actuar con confianza."
+            },
+            {
+                nombre: "La Sacerdotisa",
+                descripcion: "Encarna la intuición, los secretos y el subconsciente. Te invita a mirar más allá de lo evidente y a confiar en tu voz interior. El conocimiento oculto está a tu alcance."
+            },
+            {
+                nombre: "La Emperatriz",
+                descripcion: "Es la carta de la feminidad, la abundancia, la fertilidad y la naturaleza. Anuncia un período de crecimiento, creatividad y nutrición en tu vida. Conéctate con la belleza que te rodea."
+            },
+            {
+                nombre: "El Emperador",
+                descripcion: "Representa la autoridad, la estructura, el control y la paternidad. Es un llamado a establecer orden y disciplina en tu vida. El liderazgo y la estabilidad son tus aliados."
+            },
+            {
+                nombre: "La Rueda de la Fortuna",
+                descripcion: "Simboliza el cambio, los ciclos, el destino y los puntos de inflexión. La vida está en constante movimiento. Prepárate para un giro del destino que traerá nuevas oportunidades."
+            },
+            {
+                nombre: "La Fuerza",
+                descripcion: "Representa la valentía, la compasión, el enfoque y la fuerza interior. La verdadera fuerza no es la dominación, sino el coraje y la paciencia para domar tus instintos."
+            },
+            {
+                nombre: "La Estrella",
+                descripcion: "Es un símbolo de esperanza, fe, inspiración y serenidad. Después de la tormenta, llega la calma. Esta carta te guía hacia la sanación y la renovación de tu propósito."
+            },
+            {
+                nombre: "La Luna",
+                descripcion: "Encarna la ilusión, el miedo y la ansiedad. Te pide que enfrentes tus sombras y escuches tu intuición para navegar por la incertidumbre. No todo es lo que parece."
+            },
+            {
+                nombre: "El Sol",
+                descripcion: "Representa el éxito, la vitalidad, la alegría y la claridad. Es una de las cartas más positivas, anunciando un período de felicidad, éxito y plenitud. Disfruta de la luz y la verdad."
+            }
+        ];
+
+        // --- Lógica de la Aplicación ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const drawButton = document.getElementById('draw-card-btn');
+            const cardDisplay = document.getElementById('card-display');
+            const cardNameElem = document.getElementById('card-name');
+            const cardDescriptionElem = document.getElementById('card-description');
+
+            drawButton.addEventListener('click', () => {
+                // 1. Seleccionar una carta aleatoria
+                const randomIndex = Math.floor(Math.random() * mazo.length);
+                const cartaElegida = mazo[randomIndex];
+
+                // 2. Mostrar la información en la página
+                cardNameElem.textContent = cartaElegida.nombre;
+                cardDescriptionElem.textContent = cartaElegida.descripcion;
+
+                // 3. Hacer visible el contenedor de la carta
+                cardDisplay.style.display = 'block';
+            });
+        });
+    </script>
+
+</body>
+</html>

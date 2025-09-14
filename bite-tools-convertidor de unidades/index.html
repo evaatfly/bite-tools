@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convertidor de Unidades</title>
+    <style>
+        :root {
+            --primary-color: #6a11cb;
+            --secondary-color: #2575fc;
+            --background-color: #f0f2f5;
+            --card-background: #ffffff;
+            --text-color: #333;
+            --border-color: #ddd;
+            --button-text-color: #fff;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .converter-container {
+            background: var(--card-background);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--box-shadow);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--text-color);
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.2);
+        }
+
+        .conversion-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .conversion-controls .input-group {
+            flex: 1;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: var(--button-text-color);
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #result {
+            margin-top: 30px;
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--primary-color);
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="converter-container">
+        <h1>Convertidor de Unidades</h1>
+
+        <div class="input-group">
+            <label for="value">Valor</label>
+            <input type="number" id="value" placeholder="Introduce el valor">
+        </div>
+
+        <div class="conversion-controls">
+            <div class="input-group">
+                <label for="fromUnit">De</label>
+                <select id="fromUnit">
+                    <optgroup label="Longitud">
+                        <option value="m">Metros</option>
+                        <option value="ft">Pies</option>
+                        <option value="in">Pulgadas</option>
+                    </optgroup>
+                    <optgroup label="Peso">
+                        <option value="kg">Kilos</option>
+                        <option value="lb">Libras</option>
+                    </optgroup>
+                    <optgroup label="Temperatura">
+                        <option value="c">Celsius</option>
+                        <option value="f">Fahrenheit</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="toUnit">A</label>
+                <select id="toUnit">
+                    <optgroup label="Longitud">
+                        <option value="m">Metros</option>
+                        <option value="ft">Pies</option>
+                        <option value="in">Pulgadas</option>
+                    </optgroup>
+                    <optgroup label="Peso">
+                        <option value="kg">Kilos</option>
+                        <option value="lb">Libras</option>
+                    </optgroup>
+                    <optgroup label="Temperatura">
+                        <option value="c">Celsius</option>
+                        <option value="f">Fahrenheit</option>
+                    </optgroup>
+                </select>
+            </div>
+        </div>
+
+        <button id="convertBtn">Convertir</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('convertBtn').addEventListener('click', function() {
+            const value = parseFloat(document.getElementById('value').value);
+            const fromUnit = document.getElementById('fromUnit').value;
+            const toUnit = document.getElementById('toUnit').value;
+            const resultEl = document.getElementById('result');
+
+            if (isNaN(value)) {
+                resultEl.textContent = 'Por favor, introduce un número válido.';
+                return;
+            }
+
+            let result;
+            
+            // Factores de conversión base (a SI)
+            const conversions = {
+                // Longitud (base: metro)
+                'm': 1,
+                'ft': 0.3048,
+                'in': 0.0254,
+                // Peso (base: kilogramo)
+                'kg': 1,
+                'lb': 0.453592,
+            };
+
+            const fromGroup = getUnitGroup(fromUnit);
+            const toGroup = getUnitGroup(toUnit);
+
+            if (fromGroup !== toGroup) {
+                resultEl.textContent = 'No se puede convertir entre tipos de unidades diferentes.';
+                return;
+            }
+
+            if (fromGroup === 'temperatura') {
+                if (fromUnit === 'c' && toUnit === 'f') {
+                    result = (value * 9/5) + 32;
+                } else if (fromUnit === 'f' && toUnit === 'c') {
+                    result = (value - 32) * 5/9;
+                } else {
+                    result = value; // c -> c or f -> f
+                }
+            } else {
+                if (fromUnit === toUnit) {
+                    result = value;
+                } else {
+                    const valueInBase = value * conversions[fromUnit];
+                    result = valueInBase / conversions[toUnit];
+                }
+            }
+            
+            resultEl.textContent = `${value.toLocaleString()} ${getUnitName(fromUnit)} = ${result.toLocaleString(undefined, {maximumFractionDigits: 4})} ${getUnitName(toUnit)}`;
+        });
+
+        function getUnitGroup(unit) {
+            if (['m', 'ft', 'in'].includes(unit)) return 'longitud';
+            if (['kg', 'lb'].includes(unit)) return 'peso';
+            if (['c', 'f'].includes(unit)) return 'temperatura';
+            return null;
+        }
+
+        function getUnitName(unit) {
+            const names = {
+                'm': 'Metros',
+                'ft': 'Pies',
+                'in': 'Pulgadas',
+                'kg': 'Kilos',
+                'lb': 'Libras',
+                'c': 'Celsius',
+                'f': 'Fahrenheit'
+            };
+            return names[unit] || '';
+        }
+    </script>
+
+</body>
+</html>
